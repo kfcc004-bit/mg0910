@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>업무 FAQ 검색</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: #f5f7fa;
+      color: #222;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+    .header { margin-bottom: 28px; }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+    .header p {
+      margin: 0;
+      color: #667085;
+      font-size: 15px;
+    }
+    .home-btn {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid #c7d7ea;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #0057a8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(0, 87, 168, 0.08);
+      transition: 0.18s ease;
+    }
+    .home-btn:hover {
+      background: #0057a8;
+      border-color: #0057a8;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .home-btn:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.2);
+      outline-offset: 2px;
+    }
+    .search-box {
+      background: #fff;
+      border: 1px solid #e4e7ec;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
+    }
+    .search-input-wrap { position: relative; }
+    #searchInput {
+      width: 100%;
+      height: 52px;
+      padding: 0 18px;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      outline: none;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+    #searchInput:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    #searchInput::placeholder { color: #98a2b3; }
+    .category-area { margin-top: 18px; }
+    .category-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #475467;
+    }
+    .category-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .category-btn {
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      color: #344054;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .category-btn:hover { background: #f2f4f7; }
+    .category-btn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+      font-weight: 700;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 28px 0 14px;
+    }
+    .result-count {
+      font-size: 15px;
+      color: #475467;
+    }
+    .result-count strong { color: #2563eb; }
+    .reset-btn {
+      border: 0;
+      background: transparent;
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 6px;
+    }
+    .reset-btn:hover { text-decoration: underline; }
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .faq-card {
+      background: #fff;
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      padding: 22px;
+      transition: 0.2s;
+    }
+    .faq-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 14px rgba(16, 24, 40, 0.05);
+    }
+    .faq-category {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .faq-question {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+    .question-symbol {
+      color: #2563eb;
+      margin-right: 5px;
+    }
+    .faq-answer {
+      margin: 0;
+      padding-top: 12px;
+      border-top: 1px solid #f2f4f7;
+      color: #475467;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .answer-symbol {
+      color: #667085;
+      font-weight: 800;
+      margin-right: 5px;
+    }
+    mark {
+      background: #fef08a;
+      color: inherit;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+    .no-result {
+      background: #fff;
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .no-result-icon {
+      display: block;
+      font-size: 34px;
+      margin-bottom: 14px;
+    }
+    .no-result-title {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #344054;
+    }
+    .no-result-description {
+      margin: 0;
+      color: #667085;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .notice {
+      margin-top: 24px;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 28px 16px 60px; }
+      .header h1 { font-size: 25px; }
+      .home-btn { min-width: 62px; height: 36px; padding: 0 13px; font-size: 13px; }
+      .search-box { padding: 16px; }
+      .faq-card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div class="header-title-row">
+        <h1>업무 FAQ 검색</h1>
+        <a class="home-btn" href="https://kfcc004-bit.github.io/mg0910/" aria-label="MG 맞춤형 대출 상환 계산기로 이동">HOME</a>
+      </div>
+      <p>등록된 사내 FAQ에서 필요한 정보를 검색하세요.</p>
+    </header>
+
+    <section class="search-box">
+      <div class="search-input-wrap">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="질문이나 키워드를 입력하세요."
+          autocomplete="off"
+          aria-label="FAQ 검색"
+        />
+      </div>
+
+      <div class="category-area">
+        <span class="category-label">분류</span>
+        <div class="category-buttons">
+          <button class="category-btn active" data-category="전체">전체</button>
+          <button class="category-btn" data-category="교육">교육</button>
+          <button class="category-btn" data-category="문서">문서</button>
+          <button class="category-btn" data-category="IT">IT</button>
+          <button class="category-btn" data-category="보안">보안</button>
+        </div>
+      </div>
+    </section>
+
+    <section aria-live="polite">
+      <div class="result-header">
+        <div class="result-count" id="resultCount"></div>
+        <button type="button" class="reset-btn" id="resetButton">전체보기</button>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </section>
+
+    <div class="notice">
+      ※ 본 화면은 등록된 FAQ 데이터만 제공합니다. 검색 결과가 없는 경우 임의의 답변을 생성하지 않습니다.
+    </div>
+  </main>
+
+  <script>
+    const faqData = [
+      {
+        category: "교육",
+        question: "교육 신청은 어디에서 하나요?",
+        answer_seed: "교육 포털의 과정 검색 후 신청 메뉴를 사용합니다."
+      },
+      {
+        category: "교육",
+        question: "신청한 교육을 취소하려면 어떻게 하나요?",
+        answer_seed: "신청내역에서 취소 가능 여부를 확인합니다."
+      },
+      {
+        category: "문서",
+        question: "주간 업무보고에는 무엇을 넣어야 하나요?",
+        answer_seed: "주요 실적, 이슈, 다음 주 계획을 중심으로 작성합니다."
+      },
+      {
+        category: "IT",
+        question: "사내 시스템 접속이 되지 않습니다.",
+        answer_seed: "네트워크, 브라우저, 계정 상태를 순서대로 확인합니다."
+      },
+      {
+        category: "보안",
+        question: "ChatGPT에 내부 업무자료를 넣어도 되나요?",
+        answer_seed: "교육에서는 합성자료를 사용하고, 실제 자료는 조직의 보안 및 AI 사용 기준을 먼저 확인합니다."
+      }
+    ];
+
+    let selectedCategory = "전체";
+
+    const searchInput = document.getElementById("searchInput");
+    const faqList = document.getElementById("faqList");
+    const resultCount = document.getElementById("resultCount");
+    const resetButton = document.getElementById("resetButton");
+    const categoryButtons = document.querySelectorAll(".category-btn");
+
+    function escapeHTML(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeRegExp(value) {
+      return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function highlightText(text, keyword) {
+      const safeText = escapeHTML(text);
+      const trimmedKeyword = keyword.trim();
+      if (!trimmedKeyword) return safeText;
+
+      const safeKeyword = escapeRegExp(escapeHTML(trimmedKeyword));
+      const regex = new RegExp(`(${safeKeyword})`, "gi");
+      return safeText.replace(regex, "<mark>$1</mark>");
+    }
+
+    function getFilteredFAQ() {
+      const keyword = searchInput.value.trim().toLowerCase();
+
+      return faqData.filter((item) => {
+        const categoryMatched =
+          selectedCategory === "전체" || item.category === selectedCategory;
+
+        const searchableText =
+          `${item.question} ${item.answer_seed}`.toLowerCase();
+
+        const keywordMatched =
+          keyword === "" || searchableText.includes(keyword);
+
+        return categoryMatched && keywordMatched;
+      });
+    }
+
+    function renderFAQ() {
+      const keyword = searchInput.value.trim();
+      const filteredData = getFilteredFAQ();
+
+      resultCount.innerHTML = `검색 결과 <strong>${filteredData.length}</strong>건`;
+
+      if (filteredData.length === 0) {
+        faqList.innerHTML = `
+          <div class="no-result">
+            <span class="no-result-icon" aria-hidden="true">🔎</span>
+            <p class="no-result-title">
+              등록된 FAQ에서 답변을 찾을 수 없습니다.
+            </p>
+            <p class="no-result-description">
+              관련 담당부서 또는 공식 안내자료를 확인해 주세요.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      faqList.innerHTML = filteredData
+        .map((item) => `
+          <article class="faq-card">
+            <span class="faq-category">${escapeHTML(item.category)}</span>
+            <h2 class="faq-question">
+              <span class="question-symbol">Q.</span>
+              ${highlightText(item.question, keyword)}
+            </h2>
+            <p class="faq-answer">
+              <span class="answer-symbol">A.</span>
+              ${highlightText(item.answer_seed, keyword)}
+            </p>
+          </article>
+        `)
+        .join("");
+    }
+
+    searchInput.addEventListener("input", renderFAQ);
+
+    categoryButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedCategory = button.dataset.category;
+
+        categoryButtons.forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        renderFAQ();
+      });
+    });
+
+    resetButton.addEventListener("click", () => {
+      searchInput.value = "";
+      selectedCategory = "전체";
+
+      categoryButtons.forEach((button) => {
+        button.classList.toggle(
+          "active",
+          button.dataset.category === "전체"
+        );
+      });
+
+      renderFAQ();
+      searchInput.focus();
+    });
+
+    renderFAQ();
+  </script>
+</body>
+</html>
