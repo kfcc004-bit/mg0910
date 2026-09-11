@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>예금금리 비교 대시보드</title>
+  <style>
+    :root{--navy:#123564;--blue:#2467d1;--cyan:#41b7c4;--ink:#17243b;--muted:#65738a;--line:#dfe6ef;--bg:#f3f6fa;--white:#fff;--green:#11845b;--orange:#e68222}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif}
+    button,input,select{font:inherit}.wrap{max-width:1240px;margin:auto;padding:32px 24px 48px}
+    header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:24px}h1{margin:0 0 8px;font-size:clamp(25px,4vw,36px);letter-spacing:-1px}.sub{margin:0;color:var(--muted)}
+    .stamp{background:#e8f0fc;color:var(--navy);padding:9px 13px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.card,.panel{background:var(--white);border:1px solid var(--line);border-radius:16px;box-shadow:0 7px 22px rgba(17,43,77,.05)}.card{padding:20px}.label{font-size:13px;color:var(--muted);font-weight:700}.value{font-size:29px;font-weight:850;margin-top:8px;letter-spacing:-.5px}.hint{margin-top:6px;font-size:12px;color:var(--muted)}
+    .controls{display:grid;grid-template-columns:1fr 180px auto auto;gap:10px;margin:18px 0}.control{height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 13px;outline:none}.control:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2467d11c}.btn{height:44px;border:0;border-radius:10px;padding:0 16px;font-weight:750;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e8eef7;color:var(--navy)}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}.panel{padding:21px;overflow:hidden}.panel h2{font-size:17px;margin:0 0 5px}.panel-note{color:var(--muted);font-size:12px;margin:0 0 18px}
+    .chart{height:310px;display:flex;align-items:flex-end;gap:12px;border-bottom:1px solid var(--line);padding:16px 10px 0}.bar-wrap{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:48px}.rate{font-size:12px;font-weight:800;margin-bottom:6px}.bar{width:min(46px,75%);border-radius:7px 7px 0 0;background:linear-gradient(180deg,var(--cyan),var(--blue));min-height:3px;transition:.25s}.bar-name{text-align:center;font-size:11px;color:var(--muted);height:42px;margin-top:7px;line-height:1.25;overflow:hidden}
+    .ranking{display:flex;flex-direction:column;gap:10px}.rank{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:11px;background:#f7f9fc;border-radius:10px}.rank-no{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e1e9f6;color:var(--navy);font-weight:800;font-size:12px}.rank strong{display:block;font-size:14px}.rank small{color:var(--muted)}.rank-rate{font-weight:850;color:var(--blue)}
+    .table-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}.count{color:var(--muted);font-size:13px}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:880px}th{background:#f2f5f9;color:#4b5c74;font-size:12px;text-align:left;padding:12px;border-bottom:1px solid var(--line);white-space:nowrap}td{padding:13px 12px;border-bottom:1px solid #edf1f6;font-size:13px;vertical-align:top}tbody tr:hover{background:#f8faff}.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:750}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:750;background:#eaf0fa;color:var(--navy)}.empty{text-align:center;padding:50px;color:var(--muted)}
+    footer{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.6}.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:6px}
+    @media(max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}header{flex-direction:column}.chart{overflow-x:auto}.bar-wrap{flex:0 0 70px}}
+    @media(max-width:520px){.wrap{padding:22px 14px 36px}.cards{grid-template-columns:1fr 1fr;gap:9px}.card{padding:15px}.value{font-size:23px}.controls{grid-template-columns:1fr}.controls input{grid-column:auto}.btn{width:100%}.panel{padding:16px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header><div><h1>예금금리 비교 대시보드</h1><p class="sub">금융기관별 예금상품의 기본금리와 최고금리를 비교합니다.</p></div><div class="stamp" id="connectionStatus"><span class="dot"></span>DB 연결 중</div></header>
+  <section class="cards" aria-label="요약 지표">
+    <div class="card"><div class="label">비교 상품</div><div class="value" id="productCount">-</div><div class="hint">필터 적용 기준</div></div>
+    <div class="card"><div class="label">평균 최고금리</div><div class="value" id="avgRate">-</div><div class="hint">단순 평균</div></div>
+    <div class="card"><div class="label">가장 높은 금리</div><div class="value" id="highestRate">-</div><div class="hint" id="highestName">-</div></div>
+    <div class="card"><div class="label">최고·최저 차이</div><div class="value" id="spread">-</div><div class="hint">최고금리 기준</div></div>
+  </section>
+  <section class="controls" aria-label="검색 및 필터">
+    <input id="search" class="control" type="search" placeholder="기관명, 상품명, 우대조건 검색" aria-label="검색어">
+    <select id="sector" class="control" aria-label="업권 선택"><option value="all">전체 업권</option><option>시중은행</option><option>상호금융</option><option>저축은행</option></select>
+    <button id="reset" class="btn secondary">초기화</button><button id="download" class="btn primary">CSV 다운로드</button>
+  </section>
+  <section class="grid">
+    <article class="panel"><h2>기관별 최고금리</h2><p class="panel-note">최고금리가 높은 순서 · 단위: 연 %</p><div id="chart" class="chart" role="img" aria-label="기관별 최고금리 막대그래프"></div></article>
+    <article class="panel"><h2>금리 순위</h2><p class="panel-note">현재 검색 결과 기준</p><div id="ranking" class="ranking"></div></article>
+  </section>
+  <section class="panel"><div class="table-head"><div><h2>상품 상세</h2><p class="panel-note" style="margin:5px 0 0">열 제목을 눌러 정렬할 수 있습니다.</p></div><div id="resultCount" class="count"></div></div><div class="table-scroll"><table><thead><tr><th data-sort="institution_name">금융기관 ↕</th><th data-sort="sector">업권 ↕</th><th data-sort="product_name">상품명 ↕</th><th data-sort="base_rate">기본금리 ↕</th><th data-sort="maximum_rate">최고금리 ↕</th><th>우대조건</th><th data-sort="reference_date">기준일 ↕</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+  <footer>※ 본 화면은 열 때마다 Supabase <code>public.deposit_rate_comparisons</code> 테이블에서 최신 데이터를 직접 조회합니다. 실제 가입 전 각 금융기관의 최신 상품설명과 적용 조건을 확인하세요.</footer>
+</main>
+<script>
+const SUPABASE_URL='https://hwpioueaigcxlmutfjgp.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_kmzOOPU1ScN8nLnYxoWZvA_kbvwdxZ0';
+// 실제 데이터는 HTML에 포함하지 않습니다. Supabase 조회 성공 후에만 채워집니다.
+let dbRows=[];
+const $=s=>document.querySelector(s), esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+let sort={key:'maximum_rate',dir:-1};
+function filtered(){const q=$('#search').value.trim().toLowerCase(),sec=$('#sector').value;return dbRows.filter(x=>(sec==='all'||x.sector===sec)&&(!q||[x.institution_name,x.product_name,x.preferential_conditions].some(v=>String(v??'').toLowerCase().includes(q)))).sort((a,b)=>{const x=a[sort.key],y=b[sort.key];return(typeof x==='number'?x-y:String(x).localeCompare(String(y),'ko'))*sort.dir})}
+function render(){const d=filtered(),rates=d.map(x=>x.maximum_rate),ranked=[...d].sort((a,b)=>b.maximum_rate-a.maximum_rate);$('#productCount').textContent=d.length+'개';$('#avgRate').textContent=d.length?(rates.reduce((a,b)=>a+b,0)/d.length).toFixed(2)+'%':'-';$('#highestRate').textContent=d.length?Math.max(...rates).toFixed(2)+'%':'-';$('#highestName').textContent=ranked[0]?.institution_name||'-';$('#spread').textContent=d.length?(Math.max(...rates)-Math.min(...rates)).toFixed(2)+'%p':'-';$('#resultCount').textContent=`총 ${d.length}건`;
+ $('#chart').innerHTML=ranked.length?ranked.map(x=>`<div class="bar-wrap" title="${esc(x.institution_name)} ${x.maximum_rate.toFixed(2)}%"><div class="rate">${x.maximum_rate.toFixed(2)}%</div><div class="bar" style="height:${x.maximum_rate/4.5*220}px"></div><div class="bar-name">${esc(x.institution_name)}</div></div>`).join(''):'<div class="empty">표시할 데이터가 없습니다.</div>';
+ $('#ranking').innerHTML=ranked.length?ranked.slice(0,6).map((x,i)=>`<div class="rank"><span class="rank-no">${i+1}</span><div><strong>${esc(x.institution_name)}</strong><small>${esc(x.product_name)}</small></div><span class="rank-rate">${x.maximum_rate.toFixed(2)}%</span></div>`).join(''):'<div class="empty">검색 결과가 없습니다.</div>';
+ $('#rows').innerHTML=d.length?d.map(x=>`<tr><td><strong>${esc(x.institution_name)}</strong></td><td><span class="badge">${esc(x.sector)}</span></td><td>${esc(x.product_name)}</td><td class="num">${x.base_rate.toFixed(2)}%</td><td class="num">${x.maximum_rate.toFixed(2)}%</td><td>${esc(x.preferential_conditions)}</td><td>${esc(x.reference_date)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">검색 결과가 없습니다.</td></tr>'}
+$('#search').addEventListener('input',render);$('#sector').addEventListener('change',render);$('#reset').addEventListener('click',()=>{$('#search').value='';$('#sector').value='all';sort={key:'maximum_rate',dir:-1};render()});document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{sort.dir=sort.key===th.dataset.sort?-sort.dir:1;sort.key=th.dataset.sort;render()}));
+$('#download').addEventListener('click',()=>{const d=filtered(),head=['금융기관','업권','상품명','기본금리','최고금리','우대조건','기준일'],cell=v=>'"'+String(v??'').replaceAll('"','""')+'"',csv='\ufeff'+[head,...d.map(x=>[x.institution_name,x.sector,x.product_name,x.base_rate,x.maximum_rate,x.preferential_conditions,x.reference_date])].map(r=>r.map(cell).join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='deposit_rate_comparisons.csv';a.click();URL.revokeObjectURL(a.href)});render();
+async function loadData(){
+ const status=$('#connectionStatus');
+ status.innerHTML='<span class="dot"></span>DB 연결 중';
+ try{
+  const response=await fetch(`${SUPABASE_URL}/rest/v1/deposit_rate_comparisons?select=id,reference_date,institution_name,sector,product_name,base_rate,maximum_rate,preferential_conditions&order=maximum_rate.desc`,{headers:{apikey:SUPABASE_PUBLISHABLE_KEY}});
+  if(!response.ok) throw new Error(`HTTP ${response.status}`);
+  const rows=await response.json();
+  dbRows=rows.map(x=>({...x,base_rate:Number(x.base_rate),maximum_rate:Number(x.maximum_rate)}));
+  const latest=dbRows.map(x=>x.reference_date).sort().at(-1);
+  status.innerHTML=`<span class="dot"></span>DB 연결됨${latest?' · '+latest.replaceAll('-','.') : ''}`;
+  render();
+ }catch(error){
+  dbRows=[];render();status.textContent='DB 조회 실패';
+  $('#rows').innerHTML=`<tr><td colspan="7" class="empty">Supabase 데이터를 불러오지 못했습니다. (${esc(error.message)})</td></tr>`;
+  console.error('Supabase query failed:',error);
+ }
+}
+loadData();
+</script>
+</body>
+</html>
